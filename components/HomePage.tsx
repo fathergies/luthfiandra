@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { heroData } from "@/data/heroData";
-import { LockKeyhole, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { LockKeyhole, Maximize2, Minimize2, Pause, Play, Volume2, VolumeX } from "lucide-react";
 
 const marquee =
   "HAPPY BIRTHDAY MY ONE AND ONLY NDUT BOYFRIEND ♥ I LOVE YOU LUTHFIANDRA, PLEASE LIVE YOUR LIFE TO THE HAPPIEST bayi bleee <3";
@@ -75,8 +75,12 @@ export function HomePage() {
   const [clueLevel, setClueLevel] = useState<Record<number, number>>({});
   const [videoPlaying, setVideoPlaying] = useState(true);
   const [videoMuted, setVideoMuted] = useState(true);
+  const [videoFullscreen, setVideoFullscreen] = useState(false);
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoSectionRef = useRef<HTMLElement>(null);
+  const videoPlayerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const section = videoSectionRef.current;
@@ -94,6 +98,15 @@ export function HomePage() {
 
     observer.observe(section);
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const syncFullscreenState = () => {
+      setVideoFullscreen(document.fullscreenElement === videoPlayerRef.current);
+    };
+
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+    return () => document.removeEventListener("fullscreenchange", syncFullscreenState);
   }, []);
 
   const toggleVideoPlayback = () => {
@@ -114,6 +127,37 @@ export function HomePage() {
     const nextMuted = !video.muted;
     video.muted = nextMuted;
     setVideoMuted(nextMuted);
+  };
+
+  const openVideoFullscreen = async () => {
+    const player = videoPlayerRef.current;
+    const video = videoRef.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else if (player?.requestFullscreen) {
+        await player.requestFullscreen();
+      } else {
+        video?.webkitEnterFullscreen?.();
+      }
+    } catch {
+      video?.webkitEnterFullscreen?.();
+    }
+  };
+
+  const seekVideo = (time: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = time;
+    setVideoCurrentTime(time);
+  };
+
+  const formatVideoTime = (seconds: number) => {
+    if (!Number.isFinite(seconds)) return "0:00";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
   };
 
   const openGift = (index: number) => {
@@ -169,7 +213,7 @@ export function HomePage() {
           </div>
 
           <div className="relative border-[3px] border-[#521020] bg-[#ecebe8] p-2 shadow-[8px_10px_0_rgba(30,42,68,.12)] sm:p-3">
-            <div className="relative overflow-hidden bg-[#27151c]">
+            <div id="hero-video-player" ref={videoPlayerRef} className="relative overflow-hidden bg-[#27151c]">
               <video
                 ref={videoRef}
                 className="block max-h-[75vh] w-full cursor-pointer object-contain"
@@ -182,9 +226,32 @@ export function HomePage() {
                 onPlay={() => setVideoPlaying(true)}
                 onPause={() => setVideoPlaying(false)}
                 onVolumeChange={(event) => setVideoMuted(event.currentTarget.muted)}
+                onLoadedMetadata={(event) => setVideoDuration(event.currentTarget.duration)}
+                onDurationChange={(event) => setVideoDuration(event.currentTarget.duration)}
+                onTimeUpdate={(event) => setVideoCurrentTime(event.currentTarget.currentTime)}
               >
                 <source src={heroData.heroVideo} type="video/mp4" />
               </video>
+              {videoFullscreen && (
+                <div className="absolute inset-x-5 bottom-20 z-50 flex items-center gap-3 text-white sm:inset-x-8">
+                  <span className="min-w-[38px] font-mono text-[10px] font-bold tabular-nums text-white/85">
+                    {formatVideoTime(videoCurrentTime)}
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={videoDuration || 0}
+                    step="0.01"
+                    value={Math.min(videoCurrentTime, videoDuration || 0)}
+                    onChange={(event) => seekVideo(Number(event.target.value))}
+                    className="video-progress h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-white/35"
+                    aria-label="Video progress"
+                  />
+                  <span className="min-w-[38px] text-right font-mono text-[10px] font-bold tabular-nums text-white/85">
+                    {formatVideoTime(videoDuration)}
+                  </span>
+                </div>
+              )}
               <div className="absolute bottom-3 right-3 z-50 flex items-center gap-2 text-white sm:bottom-4 sm:right-4">
                 <button
                   type="button"
@@ -203,6 +270,15 @@ export function HomePage() {
                 >
                   {videoMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                   <span>{videoMuted ? "sound on" : "mute"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void openVideoFullscreen()}
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/45 bg-[#32151f]/75 shadow-md backdrop-blur-md transition hover:bg-[#32151f]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:h-11 sm:w-11"
+                  aria-label={videoFullscreen ? "Exit video fullscreen" : "Open video fullscreen"}
+                  title={videoFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                >
+                  {videoFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
                 </button>
               </div>
             </div>
@@ -501,29 +577,6 @@ export function HomePage() {
         </div>
       )}
 
-      <footer className="relative bg-[#790826] px-5 pb-6 pt-14 text-white md:px-8">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-3">
-          <div className="flex items-center gap-5">
-            <div className="w-28 rotate-[-8deg] rounded-md border-2 border-white bg-[#d98da4] p-3">
-              <div className="grid h-12 place-items-center border border-[#790826] bg-[#fff4ed]"><span className="h-6 w-14 rounded-full border-2 border-[#790826]" /></div>
-            </div>
-            <div className="font-mono text-xs font-bold"><p>press play</p><p>for our song</p><p className="mt-3 text-lg">◀ ▶ ▶</p></div>
-          </div>
-          <div className="text-center">
-            <p className="font-serif text-2xl italic">made with ♡<br />just for you.</p>
-            <p className="mt-4 font-mono text-xs">happy birthday, ndut.<br />i love you endlessly.</p>
-          </div>
-          <Link href="#birthday-letter" className="mx-auto rotate-[5deg] bg-[#fff6e9] px-8 py-7 text-center font-serif text-lg italic text-[#3b1723] shadow-md transition hover:rotate-0">
-            a message<br />for later ♡
-          </Link>
-        </div>
-        <div className="mx-auto mt-14 flex max-w-7xl flex-col justify-between gap-5 border-t border-white/15 pt-5 text-center font-mono text-[10px] sm:flex-row">
-          <p>© 2026 Luthfiandra. all rights reserved.</p>
-          <nav className="flex flex-wrap justify-center gap-5">
-            <Link href="/">home</Link><span>✦</span><Link href="/memories">our memories</Link><span>✦</span><Link href="/love-studio">for you</Link>
-          </nav>
-        </div>
-      </footer>
     </main>
   );
 }

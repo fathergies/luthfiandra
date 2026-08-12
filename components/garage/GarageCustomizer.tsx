@@ -3,8 +3,9 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from "react";
+import { ArrowRight, CarFront } from "lucide-react";
 import { defaultGarageBuild, stickerOptions, type GarageBuild, type LightColor, type WheelStyle } from "@/data/garageData";
-import type { GarageCarId } from "@/components/garage/CarShowroom";
+import { garageCars, type GarageCarId } from "@/components/garage/CarShowroom";
 import { LoadingScreen } from "@/components/LoadingScreen";
 
 const GARAGE_STORE = "luthfiandra-garage-build-v2";
@@ -21,6 +22,8 @@ export function GarageCustomizer() {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [rendererKey, setRendererKey] = useState(0);
   const [carId, setCarId] = useState<GarageCarId>("ferrari");
+  const [selectedCar, setSelectedCar] = useState(false);
+  const selectedCarInfo = garageCars.find(car => car.id === carId) ?? garageCars[0];
 
   useEffect(() => {
     const saved = localStorage.getItem(GARAGE_STORE);
@@ -40,20 +43,47 @@ export function GarageCustomizer() {
   const takeScreenshot = () => {
     if (!canvas) return setMessage("Showroom is still loading…");
     const link = document.createElement("a");
-    link.download = `andra-innova-${Date.now()}.png`;
+    link.download = `andra-${carId}-${Date.now()}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
     setMessage("Showroom image downloaded ✓");
   };
+
+  if (!selectedCar) {
+    return (
+      <main className="min-h-screen bg-[#eee1d2] px-5 py-14 text-[#3b1723] md:px-8 md:py-20">
+        <section className="mx-auto max-w-6xl">
+          <div className="text-center">
+            <p className="font-mono text-[9px] font-black uppercase tracking-[.32em] text-[#31527e]">Luthfi&apos;s private garage · vehicle lobby</p>
+            <h1 className="mt-4 font-serif text-5xl font-black sm:text-7xl">choose your <span className="font-normal italic text-[#c34268]">ride.</span></h1>
+            <p className="mx-auto mt-5 max-w-xl font-mono text-xs leading-6 text-[#73525d]">Pilih satu dari lima mobil, lalu bikin versi yang paling Andra banget.</p>
+          </div>
+
+          <div className="mt-12 grid gap-7 md:grid-cols-2 xl:grid-cols-3">
+            {garageCars.map(car => (
+              <button key={car.id} type="button" onClick={() => { setCarId(car.id); setSelectedCar(true); }} className="group relative overflow-hidden border-2 border-[#5b1229] bg-[#fff8ef] p-7 text-left shadow-[8px_10px_0_#d88da3] transition hover:-translate-y-2 hover:shadow-[11px_14px_0_#d88da3] sm:p-8">
+                <span className="absolute right-5 top-5 rounded-full bg-[#c9dcef] px-3 py-1 font-mono text-[8px] font-black uppercase tracking-widest text-[#31527e]">ready to build</span>
+                <span className="grid h-16 w-16 place-items-center rounded-full bg-[#74102f] text-white"><CarFront className="h-8 w-8" strokeWidth={1.6} /></span>
+                <p className="mt-7 font-mono text-[9px] font-black uppercase tracking-[.25em] text-[#b5395d]">bay {car.bay}</p>
+                <h2 className="mt-2 font-serif text-3xl font-black">{car.name}</h2>
+                <p className="mt-3 font-mono text-[10px] leading-5 text-[#76545f]">{car.detail}</p>
+                <span className="mt-7 flex items-center justify-between border-t border-[#6b1730]/15 pt-5 font-mono text-[10px] font-black uppercase tracking-wider text-[#6b1730]">enter configurator <ArrowRight className="transition group-hover:translate-x-2" size={19} /></span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#eee1d2] text-[#3b1723]">
       <section className="relative border-b-2 border-[#790826] bg-[radial-gradient(circle_at_75%_-20%,#b9cee8_0%,#fff8ef_48%,#f2d5dc_100%)] px-5 pb-9 pt-10 md:px-8">
         <div className="mx-auto flex max-w-[1450px] flex-wrap items-end justify-between gap-6">
           <div>
-            <Link href="/" className="font-mono text-[10px] font-black uppercase tracking-[.22em] text-[#790826]/55 transition hover:text-[#790826]">← back to Luthfiandra</Link>
-            <p className="mt-7 font-mono text-[10px] font-black uppercase tracking-[.28em] text-[#31527e]">Luthfi&apos;s private garage · bay 01</p>
-            <h1 className="mt-2 font-serif text-5xl font-black sm:text-7xl">Innova <span className="font-normal italic text-[#c34268]">Silver 2022</span></h1>
+            <button type="button" onClick={() => setSelectedCar(false)} className="font-mono text-[10px] font-black uppercase tracking-[.22em] text-[#790826]/55 transition hover:text-[#790826]">← choose another car</button>
+            <p className="mt-7 font-mono text-[10px] font-black uppercase tracking-[.28em] text-[#31527e]">Luthfi&apos;s private garage · bay {selectedCarInfo.bay}</p>
+            <h1 className="mt-2 font-serif text-5xl font-black sm:text-7xl">{selectedCarInfo.name}</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="rotate-2 border-2 border-[#790826] bg-[#f4c4cf] px-5 py-3 font-mono text-[9px] font-black uppercase tracking-wider shadow-[4px_5px_0_#9eb9da]">built for ndut<br/>with love ♡</div>
@@ -93,12 +123,6 @@ export function GarageCustomizer() {
             <div><p className="font-mono text-[9px] font-black uppercase tracking-[.25em] text-[#31527e]">build configurator</p><h2 className="mt-1 font-serif text-3xl font-black">make it his.</h2></div><span className="text-3xl text-[#c43f67]">⌁</span>
           </div>
           <div className="garage-scrollbar mt-6 max-h-[570px] space-y-7 overflow-y-auto pr-2 xl:max-h-[585px]">
-            <Control label="00 · Choose car">
-              <div className="grid grid-cols-2 gap-2">
-                <Choice active={carId==="ferrari"} click={()=>setCarId("ferrari")}>GT Sport</Choice>
-                <Choice active={carId==="toy-car"} click={()=>setCarId("toy-car")}>Concept Car</Choice>
-              </div>
-            </Control>
             <Control label="01 · Wheels"><div className="grid grid-cols-3 gap-2">{(["touring","sport","classic"] as WheelStyle[]).map(x=><Choice key={x} active={build.wheels===x} click={()=>update("wheels",x)}>{x}</Choice>)}</div></Control>
             <Control label="02 · Roof"><Toggle label="Roof rack" checked={build.roofRack} change={x=>update("roofRack",x)}/><Toggle label="Roof box" checked={build.roofBox} change={x=>update("roofBox",x)}/></Control>
             <Control label="03 · Window tint"><input type="range" min="10" max="90" value={build.tint} onChange={e=>update("tint",Number(e.target.value))} className="w-full accent-[#851033]"/><div className="mt-2 flex justify-between font-mono text-[9px] text-[#7b5b66]"><span>clear</span><span>{build.tint}% tint</span><span>dark</span></div></Control>

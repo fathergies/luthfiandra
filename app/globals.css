@@ -614,3 +614,54 @@ a {
     animation: none;
   }
 }
+/* Keep the homepage video centered instead of top-aligned in fullscreen. */
+#hero-video-player:fullscreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background: #27151c;
+}
+
+#hero-video-player:fullscreen video {
+  width: 100%;
+  height: 100%;
+  max-height: 100vh;
+  object-fit: contain;
+}
+
+#hero-video-player:-webkit-full-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background: #27151c;
+}
+
+#hero-video-player:-webkit-full-screen video {
+  width: 100%;
+  height: 100%;
+  max-height: 100vh;
+  object-fit: contain;
+}
+
+.video-progress::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  appearance: none;
+  border: 2px solid #fff8ef;
+  border-radius: 999px;
+  background: #d95f82;
+  box-shadow: 0 2px 8px rgba(33, 11, 19, 0.45);
+}
+
+.video-progress::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border: 2px solid #fff8ef;
+  border-radius: 999px;
+  background: #d95f82;
+  box-shadow: 0 2px 8px rgba(33, 11, 19, 0.45);
+}

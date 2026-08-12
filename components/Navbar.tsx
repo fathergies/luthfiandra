@@ -3,24 +3,23 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CarFront, Gamepad2, Heart, Home, Images, Mail, Palette } from "lucide-react";
+import { CarFront, Gamepad2, Heart, Home, Mail, Palette } from "lucide-react";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 const navItems = [
-  { title: "Home", href: "/", number: "00", icon: Home },
-  { title: "Memories", href: "/memories", number: "01", icon: Images },
-  { title: "Love Studio", href: "/love-studio", number: "02", icon: Palette },
-  { title: "Games", href: "/games", number: "03", icon: Gamepad2 },
-  { title: "Garage", href: "/garage", number: "04", icon: CarFront },
-  { title: "For You", href: "/for-you", number: "05", icon: Heart }
+  { title: "Home", href: "/", icon: Home },
+  { title: "Love Studio", href: "/love-studio", icon: Palette },
+  { title: "Games", href: "/games", icon: Gamepad2 },
+  { title: "Garage", href: "/garage", icon: CarFront },
+  { title: "For You", href: "/for-you", icon: Heart }
 ];
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [garageLoading, setGarageLoading] = useState(false);
   const pathname = usePathname();
 
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
-
-  if (pathname === "/garage") return null;
+  useEffect(() => { setMenuOpen(false); setGarageLoading(false); }, [pathname]);
 
   return (
     <>
@@ -79,6 +78,7 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => { if (item.href === "/garage" && pathname !== "/garage") setGarageLoading(true); }}
                 aria-current={active ? "page" : undefined}
                 className={`group relative flex min-w-[145px] items-center justify-center gap-3 border-x border-[#71102e]/10 px-5 py-3.5 transition first:border-l-2 last:border-r-2 ${
                   active ? "bg-[#f1cad4] text-[#71102e]" : "hover:bg-[#f8e8e9]"
@@ -86,7 +86,6 @@ export function Navbar() {
               >
                 <Icon className={`h-5 w-5 transition group-hover:-rotate-6 ${active ? "text-[#b9345a]" : "text-[#31547e]"}`} strokeWidth={1.8} />
                 <span>
-                  <span className="block font-mono text-[7px] font-black tracking-[.25em] text-[#9a6e7b]">{item.number}</span>
                   <span className="block font-serif text-[15px] font-black italic">{item.title}</span>
                 </span>
                 {active && <span className="absolute inset-x-5 bottom-0 h-[3px] bg-[#ad3155]" />}
@@ -107,6 +106,7 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => { if (item.href === "/garage" && pathname !== "/garage") setGarageLoading(true); }}
                   aria-current={active ? "page" : undefined}
                   className={`relative flex min-h-[76px] items-center gap-3 border p-3 transition ${
                     active
@@ -115,7 +115,7 @@ export function Navbar() {
                   }`}
                 >
                   <span className="grid h-9 w-9 place-items-center bg-[#e4edf8] text-[#31547e]"><Icon className="h-5 w-5" strokeWidth={1.8} /></span>
-                  <span><small className="block font-mono text-[7px] font-black tracking-[.2em] text-[#9a6e7b]">{item.number}</small><b className="font-serif text-sm italic">{item.title}</b></span>
+                  <span><b className="font-serif text-sm italic">{item.title}</b></span>
                   {active && <span className="absolute right-2 top-2 text-xs text-[#a62f52]">●</span>}
                 </Link>
               );
@@ -127,6 +127,7 @@ export function Navbar() {
         </div>
       </div>
     </header>
+    {garageLoading && <LoadingScreen variant="garage" />}
     </>
   );
 }

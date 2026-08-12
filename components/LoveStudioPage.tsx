@@ -431,11 +431,6 @@ export function LoveStudioPage() {
         </div>
       </section>
 
-      <footer className="bg-[#790826] px-5 py-10 text-center text-white">
-        <p className="font-serif text-2xl font-black italic">made slowly, sent lovingly. ♡</p>
-        <Link href="/" className="mt-5 inline-block border-b border-white/70 font-mono text-[10px] uppercase tracking-widest">← back to our home</Link>
-      </footer>
-
       {toast && <div className="studio-toast fixed bottom-6 left-1/2 z-[70] -translate-x-1/2 whitespace-nowrap bg-[#40121f] px-6 py-3 font-mono text-xs font-black text-white shadow-[5px_6px_0_#d98da4]" role="status">{toast}</div>}
 
       {openedItem && (

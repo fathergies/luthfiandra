@@ -96,7 +96,7 @@ export const heroData = {
     },
     {
       title: "Garage",
-      description: "Customize your Innova Silver 2022.",
+      description: "Choose and customize a car in Andra's private garage.",
       href: "/garage",
       icon: "↗",
       accent: "blue"

@@ -3,11 +3,27 @@
 import { Bounds, ContactShadows, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo } from "react";
-import { CanvasTexture, Color, Mesh, MeshPhysicalMaterial, PMREMGenerator, SRGBColorSpace } from "three";
+import { Box3, CanvasTexture, Color, DoubleSide, Mesh, MeshPhysicalMaterial, PMREMGenerator, SRGBColorSpace, Vector3 } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { GarageBuild } from "@/data/garageData";
 
-export type GarageCarId = "ferrari" | "toy-car";
+export type GarageCarId = "ferrari" | "car-concept" | "bmw-m3" | "audi-s4" | "bmw-m3-gtr";
+
+export const garageCars: { id: GarageCarId; name: string; detail: string; bay: string }[] = [
+  { id: "ferrari", name: "Ferrari 458 Italia", detail: "Italian supercar · silver edition", bay: "01" },
+  { id: "car-concept", name: "Khronos Car Concept", detail: "Futuristic grand tourer", bay: "02" },
+  { id: "bmw-m3", name: "BMW M3 E46", detail: "Realistic street-spec performance coupe", bay: "03" },
+  { id: "audi-s4", name: "Audi S4 2006", detail: "Detailed PBR German sport sedan", bay: "04" },
+  { id: "bmw-m3-gtr", name: "BMW M3 GTR", detail: "Detailed race-spec hero car", bay: "05" }
+];
+
+const carPaths: Record<GarageCarId, string> = {
+  ferrari: "/models/garage/ferrari.glb",
+  "car-concept": "/models/garage/car-concept.glb",
+  "bmw-m3": "/models/garage/bmw-m3.glb",
+  "audi-s4": "/models/garage/audi-s4.glb",
+  "bmw-m3-gtr": "/models/garage/bmw-m3-gtr.glb"
+};
 
 type CarShowroomProps = {
   build: GarageBuild;
@@ -49,10 +65,27 @@ export function CarShowroom({ build, carId, onCanvasReady }: CarShowroomProps) {
 }
 
 function CarAsset({ carId, build }: { carId: GarageCarId; build: GarageBuild }) {
-  const path = carId === "ferrari" ? "/models/garage/ferrari.glb" : "/models/garage/toy-car.glb";
-  const gltf = useGLTF(path);
+  const gltf = useGLTF(carPaths[carId]);
   const scene = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
-  const bodyColor = build.bodyAccent ? "#851033" : carId === "ferrari" ? "#b8bdc4" : "#789fd0";
+  const factoryColors: Record<GarageCarId, string> = {
+    ferrari: "#b8bdc4", "car-concept": "#8fa7bf", "bmw-m3": "#b9bec5",
+    "audi-s4": "#aeb5bd", "bmw-m3-gtr": "#315f9d"
+  };
+  const bodyColor = build.bodyAccent ? "#851033" : factoryColors[carId];
+  const normalized = useMemo(() => {
+    scene.updateWorldMatrix(true, true);
+    const box = new Box3().setFromObject(scene);
+    const size = box.getSize(new Vector3());
+    const center = box.getCenter(new Vector3());
+    const scale = 4.5 / Math.max(size.x, size.z, .001);
+    return {
+      scale,
+      position: [-center.x * scale, -box.min.y * scale, -center.z * scale] as [number, number, number],
+      width: size.x * scale,
+      height: size.y * scale,
+      length: size.z * scale
+    };
+  }, [scene]);
 
   useEffect(() => {
     scene.traverse(object => {
@@ -60,45 +93,59 @@ function CarAsset({ carId, build }: { carId: GarageCarId; build: GarageBuild }) 
       object.castShadow = true;
       object.receiveShadow = true;
       const name = object.name.toLowerCase();
-      if (carId === "toy-car" && name === "toycar" && !Array.isArray(object.material)) {
-        const material = object.material.clone() as MeshPhysicalMaterial;
-        if ("color" in material) material.color.set(bodyColor);
-        object.material = material;
-      }
-      if (name.includes("body") || name.includes("paint") || name.includes("carrosserie")) {
-        object.material = new MeshPhysicalMaterial({ color: bodyColor, metalness: .82, roughness: .2, clearcoat: 1, clearcoatRoughness: .12 });
-      }
-      if (name.includes("glass") || name.includes("window")) {
-        object.material = new MeshPhysicalMaterial({ color: new Color("#101c28"), metalness: .15, roughness: .08, transparent: true, opacity: Math.max(.35, 1 - build.tint / 125) });
-      }
-      if (name.includes("rim")) {
-        object.material = new MeshPhysicalMaterial({ color: build.wheels === "sport" ? "#22262c" : "#d9dde0", metalness: 1, roughness: build.wheels === "classic" ? .08 : .2 });
-      }
-    });
+      let hierarchyName = name;
+      let parent = object.parent;
+      while (parent) { hierarchyName += ` ${parent.name.toLowerCase()}`; parent = parent.parent; }
+      const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
+      const isWheelMesh = hierarchyName.includes("rim") || hierarchyName.includes("wheel") || hierarchyName.includes("tyre") || hierarchyName.includes("tire");
 
-    if (carId === "ferrari") {
-      const body = scene.getObjectByName("body") as Mesh | undefined;
-      if (body) body.material = new MeshPhysicalMaterial({ color: bodyColor, metalness: .86, roughness: .18, clearcoat: 1, clearcoatRoughness: .1 });
-      const glass = scene.getObjectByName("glass") as Mesh | undefined;
-      if (glass) glass.material = new MeshPhysicalMaterial({ color: "#10202d", metalness: .15, roughness: .05, transparent: true, opacity: Math.max(.3, 1 - build.tint / 120) });
-      ["rim_fl","rim_fr","rim_rl","rim_rr","trim"].forEach(name => {
-        const mesh = scene.getObjectByName(name) as Mesh | undefined;
-        if (mesh) mesh.material = new MeshPhysicalMaterial({ color: build.wheels === "sport" ? "#1d2228" : "#e1e4e6", metalness: 1, roughness: build.wheels === "classic" ? .07 : .18 });
+      if (isWheelMesh) {
+        if (!object.userData.originalScale) object.userData.originalScale = object.scale.clone();
+        const originalScale = object.userData.originalScale as Vector3;
+        const scale = build.wheels === "sport" ? 1.08 : build.wheels === "classic" ? .96 : 1;
+        object.scale.copy(originalScale).multiplyScalar(scale);
+      }
+
+      const styledMaterials = originalMaterials.map(material => {
+        const materialName = material.name.toLowerCase();
+        const isPaint = materialName.includes("paint") || materialName.includes("body_color") || materialName.includes("carrosserie") || (carId === "ferrari" && name === "body") || (carId === "bmw-m3" && materialName.endsWith("mm_ext"));
+        const isGlass = materialName.includes("glass") || materialName.includes("window") || name.includes("glass") || name.includes("window");
+        const isRim = materialName.includes("rim") || materialName.includes("wheel") || (isWheelMesh && !materialName.includes("tire") && !materialName.includes("tyre") && !materialName.includes("brake") && !materialName.includes("rotor") && !materialName.includes("rubber"));
+
+        if (isPaint) {
+          const styled = new MeshPhysicalMaterial({ color: bodyColor, metalness: .76, roughness: .22, clearcoat: 1, clearcoatRoughness: .1 });
+          styled.name = material.name;
+          return styled;
+        }
+        if (isGlass) {
+          const styled = new MeshPhysicalMaterial({ color: new Color("#101c28"), metalness: .08, roughness: .06, transparent: true, opacity: .28 + (build.tint / 100) * .68 });
+          styled.name = material.name;
+          return styled;
+        }
+        if (isRim) {
+          const styled = new MeshPhysicalMaterial({
+            color: build.wheels === "sport" ? "#171b20" : build.wheels === "classic" ? "#f0e2c8" : "#b8c0c8",
+            metalness: 1, roughness: build.wheels === "classic" ? .08 : build.wheels === "sport" ? .28 : .34, clearcoat: 1
+          });
+          styled.name = material.name;
+          return styled;
+        }
+        return material.clone();
       });
-    }
+      object.material = Array.isArray(object.material) ? styledMaterials : styledMaterials[0];
+    });
   }, [scene, carId, bodyColor, build.tint, build.wheels]);
 
-  const config = carId === "ferrari"
-    ? { scale: 1.5, rotation: [0, Math.PI, 0] as [number,number,number], plate: [0, .35, -2.25] as [number,number,number], plateRotation: [0,0,0] as [number,number,number] }
-    : { scale: 1.1, rotation: [0, 0, 0] as [number,number,number], plate: [0, .48, 2.05] as [number,number,number], plateRotation: [0,Math.PI,0] as [number,number,number] };
+  const rotation: [number, number, number] = carId === "ferrari" ? [0, Math.PI, 0] : [0, 0, 0];
 
   return (
-    <group rotation={config.rotation} scale={config.scale}>
-      <primitive object={scene} />
-      <DynamicPlate text={build.plate} position={config.plate} rotation={config.plateRotation} />
-      {build.roofRack && <RoofRack />}
-      {build.roofBox && <mesh position={[0, 1.65, 0]} castShadow><boxGeometry args={[1.8,.34,.82]}/><meshPhysicalMaterial color="#242831" metalness={.65} roughness={.22}/></mesh>}
-      {build.sticker !== "none" && <mesh position={[1.05,.9,-.86]} rotation={[0,0,.05]}><planeGeometry args={[.7,.22]}/><meshBasicMaterial color={build.sticker==="heart"?"#d33f67":"#fff2e8"}/></mesh>}
+    <group rotation={rotation}>
+      <group scale={normalized.scale} position={normalized.position}><primitive object={scene} /></group>
+      <DynamicPlate text={build.plate} position={[0, Math.max(.34, normalized.height * .23), -normalized.length / 2 - .04]} rotation={[0,0,0]} />
+      {build.roofRack && <RoofRack y={normalized.height + .03} width={normalized.width} length={normalized.length} />}
+      {build.roofBox && <RoofBox y={normalized.height + .3} />}
+      {build.sticker !== "none" && <StickerDecals style={build.sticker} x={normalized.width / 2 + .02} y={normalized.height * .48} length={normalized.length} />}
+      <FogLights color={build.lights} x={normalized.width * .31} y={Math.max(.3, normalized.height * .24)} z={-normalized.length / 2 - .055} />
     </group>
   );
 }
@@ -117,8 +164,38 @@ function DynamicPlate({ text, position, rotation }: { text: string; position: [n
   return <mesh position={position} rotation={rotation}><boxGeometry args={[1.05,.34,.035]}/><meshStandardMaterial map={texture} roughness={.55}/></mesh>;
 }
 
-function RoofRack() {
-  return <group position={[0,1.55,0]}>{[-.6,.6].map(x=><mesh key={x} position={[x,0,0]}><boxGeometry args={[.06,.07,1.55]}/><meshStandardMaterial color="#20242a" metalness={.8}/></mesh>)}</group>;
+function RoofRack({ y, width, length }: { y: number; width: number; length: number }) {
+  const rackWidth = Math.min(width * .7, 1.45);
+  const rackLength = Math.min(length * .48, 1.75);
+  return <group position={[0,y,0]}>{[-rackWidth / 2,rackWidth / 2].map(x=><mesh key={`rail-${x}`} position={[x,0,0]} castShadow><boxGeometry args={[.07,.08,rackLength]}/><meshStandardMaterial color="#20242a" metalness={.8} roughness={.2}/></mesh>)}{[-rackLength * .36,rackLength * .36].map(z=><mesh key={`bar-${z}`} position={[0,.025,z]} castShadow><boxGeometry args={[rackWidth + .1,.06,.07]}/><meshStandardMaterial color="#303640" metalness={.8} roughness={.2}/></mesh>)}</group>;
+}
+
+function RoofBox({ y }: { y: number }) {
+  return <group position={[0,y,0]}><mesh rotation={[Math.PI / 2,0,0]} castShadow><capsuleGeometry args={[.42,1.25,8,18]}/><meshPhysicalMaterial color="#242831" metalness={.62} roughness={.2} clearcoat={1}/></mesh><mesh position={[0,-.25,0]} scale={[1.5,.35,1]}><boxGeometry args={[1,.25,1.45]}/><meshStandardMaterial color="#14171c" metalness={.7} roughness={.25}/></mesh></group>;
+}
+
+function FogLights({ color, x, y, z }: { color: GarageBuild["lights"]; x: number; y: number; z: number }) {
+  const lightColor = color === "warm" ? "#ffd28a" : color === "ice" ? "#a9dcff" : "#ffffff";
+  return <group>{[-x,x].map(lightX=><group key={lightX} position={[lightX,y,z]}><mesh rotation={[0,Math.PI,0]}><circleGeometry args={[.13,24]}/><meshStandardMaterial color={lightColor} emissive={lightColor} emissiveIntensity={3}/></mesh><pointLight color={lightColor} intensity={1.4} distance={2.2}/></group>)}</group>;
+}
+
+function StickerDecals({ style, x, y, length }: { style: GarageBuild["sticker"]; x: number; y: number; length: number }) {
+  const texture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 768; canvas.height = 220;
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = style === "heart" ? "#d33f67" : "#fff7ec";
+    ctx.font = style === "heart" ? "bold 150px serif" : "bold 86px serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const label = style === "luthfiandra" ? "LUTHFIANDRA" : style === "initials" ? "L + A" : style === "angie" ? "MADE BY ANGIE" : "♥";
+    ctx.fillText(label, canvas.width / 2, canvas.height / 2);
+    const map = new CanvasTexture(canvas); map.colorSpace = SRGBColorSpace; return map;
+  }, [style]);
+
+  useEffect(() => () => texture.dispose(), [texture]);
+
+  return <group>{[-1,1].map(side=><mesh key={side} position={[side * x,y,0]} rotation={[0,side * Math.PI / 2,0]}><planeGeometry args={[Math.min(length * .42,1.5),.33]}/><meshBasicMaterial map={texture} transparent side={DoubleSide} depthWrite={false}/></mesh>)}</group>;
 }
 
 function LoadingMarker() {
@@ -142,4 +219,7 @@ function LocalStudioEnvironment() {
 }
 
 useGLTF.preload("/models/garage/ferrari.glb");
-useGLTF.preload("/models/garage/toy-car.glb");
+useGLTF.preload("/models/garage/car-concept.glb");
+useGLTF.preload("/models/garage/bmw-m3.glb");
+useGLTF.preload("/models/garage/audi-s4.glb");
+useGLTF.preload("/models/garage/bmw-m3-gtr.glb");

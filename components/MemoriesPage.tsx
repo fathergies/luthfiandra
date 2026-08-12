@@ -1,13 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 
 const categories = ["Favorite Photos", "Favorite Dates", "Random Screenshots", "Funniest Moments", "Favorite Trips", "Little Things I Love About You"] as const;
 type Category = typeof categories[number];
 type Month = "April" | "May" | "June" | "July" | "August";
 type Shape = "polaroid" | "ticket" | "chat" | "camera" | "key" | "flower" | "receipt";
-type Memory = { id: number; title: string; date: string; month: Month; category: Category; shape: Shape; icon: string; story: string; color: string };
+type Memory = { id: number; title: string; date: string; month: Month; category: Category; shape: Shape; icon: string; story: string; color: string; image: string };
 
 const timeline = [
   ["April 2026", "first time we met", "👋", "The beginning didn’t announce itself. It just quietly became my favorite plot twist.", "#e59ab0"],
@@ -37,7 +36,10 @@ const memories: Memory[] = [
   [16,"Could not stop laughing","Aug 09","August","Funniest Moments","camera","🤣","Add the most chaotic video from August here. The blurrier, the better.","#e390aa"],
   [17,"Our favorite road so far","Aug 16","August","Favorite Trips","key","🚗","A trip memory isn’t only the view. It’s the snacks, missed exits, and songs we replayed.","#83a8d2"],
   [18,"You remembered","Aug 25","August","Little Things I Love About You","flower","🌷","You remembered something small I said weeks ago. I acted normal; my heart absolutely did not.","#eeb4c3"]
-].map(([id,title,date,month,category,shape,icon,story,color]) => ({ id,title,date,month,category,shape,icon,story,color } as Memory));
+].map(([id,title,date,month,category,shape,icon,story,color]) => ({
+  id,title,date,month,category,shape,icon,story,color,
+  image: `/assets/memories/shelf/memory-${String(id).padStart(2, "0")}.jpg`
+} as Memory));
 
 const sushi = [
   ["recreate the pose","🍣","Find an old photo, recreate the pose right now, and take the new version.","PHOTO MISSION"],
@@ -68,9 +70,9 @@ export function MemoriesPage() {
         <span className="absolute left-[5%] top-14 hidden rotate-[-9deg] border border-[#64162d] bg-[#f1b6c6] px-5 py-3 font-mono text-[9px] font-black uppercase tracking-widest shadow-[4px_5px_0_#92b0d4] md:block">admit two · always</span>
         <span className="absolute right-[7%] top-20 hidden text-7xl text-[#49688f] md:block">⌁</span>
         <div className="mx-auto max-w-6xl text-center">
-          <p className="font-mono text-[10px] font-black uppercase tracking-[.38em] text-[#b63258]">Luthfiandra presents · collection no. 01</p>
+          <p className="font-mono text-[10px] font-black uppercase tracking-[.38em] text-[#b63258]">COLLECTION OF OUR MEMORIES NDUT</p>
           <h1 className="mt-7 font-serif text-6xl font-black leading-[.82] text-[#481222] sm:text-8xl lg:text-9xl">the little<br/><span className="font-normal italic text-[#c94168]">museum of us</span></h1>
-          <p className="mx-auto mt-9 max-w-xl font-mono text-xs leading-6 text-[#674550]">Five months, many camera rolls, questionable screenshots, and a growing collection of days I never want to forget.</p>
+          <p className="mx-auto mt-9 max-w-xl font-mono text-xs leading-6 text-[#674550]">since april and a growing collection of days I never want to forget.</p>
           <a href="#shelf" className="mt-10 inline-flex h-28 w-28 rotate-6 items-center justify-center rounded-full border-2 border-[#64162d] bg-[#a9c5e5] text-center font-mono text-[9px] font-black uppercase leading-4 shadow-[6px_7px_0_#df8fa8] transition hover:rotate-0">enter the<br/>exhibition<br/>↓</a>
         </div>
       </section>
@@ -110,12 +112,10 @@ export function MemoriesPage() {
         </div>
       </section>
 
-      <footer className="bg-[#fff8ee] px-5 py-12 text-center"><p className="font-serif text-3xl font-black italic">the museum is still collecting. ♡</p><p className="mt-2 font-mono text-[10px]">more dates, more shelves, more us.</p><Link href="/" className="mt-6 inline-block border-b border-[#541529] font-mono text-[10px] font-black uppercase tracking-widest">← return home</Link></footer>
-
       {active && <div className="memory-modal fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[#1b1015]/75 px-4 py-8 backdrop-blur-sm" onMouseDown={e=>e.target===e.currentTarget&&setActive(null)}>
         <article className="memory-dialog relative w-full max-w-2xl border-2 border-[#541529] bg-[#fff9ef] p-6 shadow-[12px_14px_0_rgba(137,174,214,.55)] sm:p-9">
           <button type="button" onClick={()=>setActive(null)} className="absolute right-4 top-3 z-10 text-3xl">×</button>
-          <div className="grid gap-7 sm:grid-cols-[.85fr_1.15fr]"><div className="grid aspect-[4/5] place-items-center border-[10px] border-white text-center shadow-md" style={{backgroundColor:active.color}}><span><b className="block text-7xl">{active.icon}</b><small className="mt-4 block font-mono text-[8px] font-black uppercase tracking-widest">your media here</small></span></div><div className="self-center"><p className="font-mono text-[9px] font-black uppercase tracking-[.25em] text-[#bd3c61]">{active.date} · {active.category}</p><h2 className="mt-3 font-serif text-4xl font-black leading-tight">{active.title}</h2><p className="mt-5 font-mono text-xs leading-6 text-[#684955]">{active.story}</p><span className="mt-7 inline-block rotate-[-3deg] bg-[#b6cce7] px-5 py-2 font-serif text-lg font-black italic">keep this one forever ♡</span></div></div>
+          <div className="grid gap-7 sm:grid-cols-[.85fr_1.15fr]"><div className="relative grid aspect-[4/5] place-items-center overflow-hidden border-[10px] border-white text-center shadow-md" style={{backgroundColor:active.color}}><span><b className="block text-7xl">{active.icon}</b><small className="mt-4 block font-mono text-[8px] font-black uppercase tracking-widest">your media here</small></span><img src={active.image} alt={active.title} className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} /></div><div className="self-center"><p className="font-mono text-[9px] font-black uppercase tracking-[.25em] text-[#bd3c61]">{active.date} · {active.category}</p><h2 className="mt-3 font-serif text-4xl font-black leading-tight">{active.title}</h2><p className="mt-5 font-mono text-xs leading-6 text-[#684955]">{active.story}</p><span className="mt-7 inline-block rotate-[-3deg] bg-[#b6cce7] px-5 py-2 font-serif text-lg font-black italic">keep this one forever ♡</span></div></div>
           {activeTimeline&&<div className="mt-8 border-t-2 border-dashed border-[#c6a5af] pt-6"><p className="font-mono text-[8px] font-black uppercase tracking-[.28em] text-[#31527e]">how we got here · timeline chapter</p><div className="mt-4 flex gap-4"><span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-[#541529] text-2xl" style={{backgroundColor:activeTimeline[4]}}>{activeTimeline[2]}</span><div><p className="font-mono text-[8px] font-black uppercase text-[#b6385d]">{activeTimeline[0]}</p><h3 className="mt-1 font-serif text-2xl font-black">{activeTimeline[1]}</h3><p className="mt-2 font-mono text-[10px] leading-5 text-[#70515c]">{activeTimeline[3]}</p></div></div></div>}
         </article>
       </div>}
@@ -128,5 +128,5 @@ function SushiArt({index}:{index:number}) { const column=index%5;const row=Math.
 function Filter({active,click,children}:{active:boolean;click:()=>void;children:React.ReactNode}) { return <button type="button" onClick={click} className={`rounded-full border px-3 py-2 font-mono text-[9px] font-black transition ${active?"border-[#64162d] bg-[#64162d] text-white shadow-[2px_3px_0_#a9c4e3]":"border-[#a8818d] bg-white text-[#6c4350] hover:-translate-y-1"}`}>{children}</button> }
 function MemoryObject({memory,index,open}:{memory:Memory;index:number;open:()=>void}) {
   const shapes:Record<Shape,string>={polaroid:"rotate-[-3deg] border-[10px] border-b-[42px] border-white",ticket:"rotate-2 [clip-path:polygon(0_0,96%_0,100%_12%,96%_24%,100%_36%,96%_48%,100%_60%,96%_72%,100%_84%,96%_100%,0_100%,4%_84%,0_72%,4%_60%,0_48%,4%_36%,0_24%,4%_12%)]",chat:"rounded-[2rem] rounded-bl-sm",camera:"rounded-[2rem] border-[10px] border-[#422432]",key:"rounded-[50%_15%_50%_15%]",flower:"rounded-[50%]",receipt:"rotate-[-2deg] [clip-path:polygon(0_0,100%_0,100%_95%,92%_100%,84%_95%,76%_100%,68%_95%,60%_100%,52%_95%,44%_100%,36%_95%,28%_100%,20%_95%,12%_100%,4%_95%,0_100%)]"};
-  return <button type="button" onClick={open} className="memory-object group relative mx-auto w-full max-w-sm pt-4 text-left"><span className={`relative grid min-h-64 place-items-center overflow-hidden p-7 shadow-[7px_9px_0_#a9bdd5] transition duration-300 group-hover:-translate-y-3 group-hover:rotate-1 ${shapes[memory.shape]}`} style={{backgroundColor:memory.color}}><span className="absolute inset-0 opacity-25 [background-image:radial-gradient(#4d2130_1px,transparent_1px)] [background-size:15px_15px]"/><span className="relative text-center"><b className="block text-6xl">{memory.icon}</b><small className="mt-3 block font-mono text-[8px] font-black uppercase tracking-[.2em]">object no. {String(index+1).padStart(2,"0")}</small></span></span><span className="mt-4 block font-mono text-[9px] font-black uppercase tracking-wider text-[#ba3c60]">{memory.date} · {memory.month}</span><span className="mt-1 block font-serif text-2xl font-black">{memory.title}</span><span className="mt-1 block font-mono text-[9px] text-[#74525e]">{memory.category} →</span></button>
+  return <button type="button" onClick={open} className="memory-object group relative mx-auto w-full max-w-sm pt-4 text-left"><span className={`relative grid min-h-64 place-items-center overflow-hidden p-7 shadow-[7px_9px_0_#a9bdd5] transition duration-300 group-hover:-translate-y-3 group-hover:rotate-1 ${shapes[memory.shape]}`} style={{backgroundColor:memory.color}}><span className="absolute inset-0 opacity-25 [background-image:radial-gradient(#4d2130_1px,transparent_1px)] [background-size:15px_15px]"/><span className="relative text-center"><b className="block text-6xl">{memory.icon}</b><small className="mt-3 block font-mono text-[8px] font-black uppercase tracking-[.2em]">object no. {String(index+1).padStart(2,"0")}</small></span><img src={memory.image} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} /><span className="absolute bottom-2 right-2 rounded-full bg-[#fff8ef]/90 px-2 py-1 font-mono text-[7px] font-black text-[#541529]">#{String(memory.id).padStart(2,"0")}</span></span><span className="mt-4 block font-mono text-[9px] font-black uppercase tracking-wider text-[#ba3c60]">{memory.date} · {memory.month}</span><span className="mt-1 block font-serif text-2xl font-black">{memory.title}</span><span className="mt-1 block font-mono text-[9px] text-[#74525e]">{memory.category} →</span></button>
 }

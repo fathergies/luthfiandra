@@ -13,56 +13,66 @@ const defaultPlayers: Player[] = [
 ];
 
 const games: { id: GameId; number: string; title: string; icon: string; description: string; color: string; tag: string }[] = [
-  { id: "bingo", number: "01", title: "Family 100: Couple Edition", icon: "🏆", description: "Pilih kategori, jawab pertanyaannya, lalu buka jawaban dan kumpulkan poinnya.", color: "#e68ca7", tag: "survey says!" },
+  { id: "bingo", number: "01", title: "Family 100: Couple Edition", icon: "🏆", description: "Pilih satu dari 25 pertanyaan acak, jawab, lalu buka jawabannya dan kumpulkan poin.", color: "#e68ca7", tag: "41 questions · shuffled" },
   { id: "memory", number: "02", title: "Who Said That?", icon: "💬", description: "Baca potongan chat-nya dan tebak: ini dikirim Angie atau Andra?", color: "#8eafd7", tag: "10 chat rounds" },
   { id: "month", number: "03", title: "Telepathy Test", icon: "⚡", description: "Dapatkan satu kategori, tulis satu kata diam-diam, lalu lihat apakah pikiran kalian sama.", color: "#efc65c", tag: "same word wins" },
   { id: "cards", number: "04", title: "Draw Our Memory", icon: "✎", description: "Draw the prompt before time runs out, then compare your masterpiece with what actually happened.", color: "#c86488", tag: "10 chaotic sketches" },
-  { id: "quiz", number: "05", title: "The Password Is Us", icon: "🔐", description: "Inspect four objects, connect the clues, and crack our secret four-digit password.", color: "#759ac8", tag: "mini escape room" },
   { id: "psychic", number: "06", title: "This or That: Psychic Edition", icon: "🔮", description: "Choose in secret, then let your partner predict your answer. How well can you read each other?", color: "#9277bd", tag: "predict your partner" },
   { id: "archive", number: "07", title: "Two Truths & A Lie: Archive Edition", icon: "🗂️", description: "Three stories from our archive. One is fake—find the lie and inspect the receipt.", color: "#73a58f", tag: "evidence included" },
   { id: "fake", number: "08", title: "Photo or Fake?", icon: "📸", description: "Decide whether the caption is a real memory or something that literally never happened.", color: "#dd9a59", tag: "real or made up" }
 ];
 
-type FamilyQuestion = { question: string; answer: string; points: number };
-type FamilyCategory = { name: string; icon: string; color: string; questions: FamilyQuestion[] };
+const visibleGames = games.filter(game => game.id === "bingo");
 
-const familyCategories: FamilyCategory[] = [
-  { name: "Tentang Kita", icon: "♡", color: "#d95f83", questions: [
-    { question: "Siapa yang biasanya bilang kangen duluan?", answer: "Angie", points: 10 },
-    { question: "Apa kegiatan sederhana yang paling sering kita lakukan bareng?", answer: "Makan bareng", points: 20 },
-    { question: "Di bulan apa cerita kita mulai makin dekat?", answer: "April", points: 30 },
-    { question: "Apa yang selalu berhasil bikin suasana kita membaik?", answer: "Ngobrol baik-baik sambil makan", points: 40 },
-    { question: "Satu kata yang paling cocok menggambarkan hubungan kita?", answer: "Rumah", points: 50 }
-  ]},
-  { name: "Siapa Paling...", icon: "☝", color: "#789fd0", questions: [
-    { question: "Siapa yang paling mungkin ketiduran saat telepon?", answer: "Andra", points: 10 },
-    { question: "Siapa yang paling sering mencuri makanan pasangan?", answer: "Dua-duanya", points: 20 },
-    { question: "Siapa yang paling lama pilih makanan?", answer: "Angie", points: 30 },
-    { question: "Siapa yang paling mungkin nyasar saat jalan bareng?", answer: "Andra", points: 40 },
-    { question: "Siapa yang lebih dulu minta maaf setelah berantem?", answer: "Yang sudah nggak tahan kangen", points: 50 }
-  ]},
-  { name: "Favorit Kita", icon: "★", color: "#e3b94f", questions: [
-    { question: "Pilihan date spontan favorit kita?", answer: "Random food hunting", points: 10 },
-    { question: "Waktu favorit untuk ngobrol panjang?", answer: "Malam hari", points: 20 },
-    { question: "Apa yang wajib ada saat road trip?", answer: "Playlist dan camilan", points: 30 },
-    { question: "Jenis foto kita yang justru paling berkesan?", answer: "Foto candid yang blur", points: 40 },
-    { question: "Date mana yang paling ingin kita ulang?", answer: "First proper date", points: 50 }
-  ]},
-  { name: "Memory Check", icon: "◷", color: "#9474b7", questions: [
-    { question: "Apa benda yang paling banyak menyimpan memori kita?", answer: "Camera roll", points: 10 },
-    { question: "Apa yang pernah mengubah salah jalan jadi memori bagus?", answer: "Road trip dadakan", points: 20 },
-    { question: "Hal random apa yang layak masuk museum hubungan kita?", answer: "Screenshot tanpa konteks", points: 30 },
-    { question: "Memori sederhana apa yang terasa paling hangat?", answer: "Comfort-food date", points: 40 },
-    { question: "Apa detail kecil yang bikin seseorang merasa sangat dicintai?", answer: "Saat pasangannya mengingat cerita kecil", points: 50 }
-  ]},
-  { name: "Masa Depan", icon: "✦", color: "#6faa91", questions: [
-    { question: "Hal kecil apa yang harus lebih sering kita lakukan?", answer: "Quality time tanpa distraksi", points: 10 },
-    { question: "Destinasi sederhana untuk petualangan berikutnya?", answer: "Kota yang belum pernah dikunjungi", points: 20 },
-    { question: "Tradisi tahunan apa yang seru untuk kita mulai?", answer: "Recreate foto atau first date", points: 30 },
-    { question: "Apa yang harus selalu dibawa ke masa depan kita?", answer: "Humor dan komunikasi", points: 40 },
-    { question: "Berapa banyak memori lagi yang mau kita buat?", answer: "Sebanyak mungkin", points: 50 }
-  ]}
-];
+type FamilyQuestion = { question: string; answer: string; points: number };
+
+const familyQuestions: FamilyQuestion[] = [
+  ["Kita pertama kali chattan tanggal berapa?", "14 April"],
+  ["Kita jadian tanggal berapa?", "8 Juli"],
+  ["Pertama kali pergi berdua kita ke mana?", "Pizza Hut"],
+  ["Pertama kali photobooth kita di mana?", "PIM"],
+  ["Benda couple pertama yang kita punya apa?", "Pod"],
+  ["Panggilan sayang yang paling sering kita pakai ke satu sama lain?", "Bayi"],
+  ["Baju yang Angie pakai pas kita nonton bioskop sama Anya dan Gasan warna apa?", "Putih"],
+  ["Sticker yang paling sering kita pakai apa?", "Nailong"],
+  ["Siapa yang paling sering nggak bales TikTok yang dikirim?", "Andra"],
+  ["Tanggal berapa Andra pertama kali minta waktu sendiri?", "20 Juli"],
+  ["Lagu apa yang Angie pakai di website buat Andra?", "Mistikus Cinta — Dewa"],
+  ["Pas di Lana kita pernah pesan Janji Jiwa. Angie pesan apa?", "Jiwa Toast"],
+  ["Pertama kali pergi berdua Angie pakai baju warna apa?", "Hitam"],
+  ["Tiga huruf belakang plat mobil Angie apa?", "ROS"],
+  ["Angie paling suka warna apa?", "Putih"],
+  ["Angie nggak suka makan apa?", "Sayur"],
+  ["Siapa nama abang Angie?", "Kiel"],
+  ["Password laptop Angie apa?", "251206"],
+  ["Angie masuk UI lewat jalur apa?", "SIMAK"],
+  ["Angie paling suka hewan apa?", "Anjing"],
+  ["Merek laptop Angie apa?", "Lenovo"],
+  ["Siapa nama teman Angie yang waktu itu ceramahin Angie soal kesehatan?", "Leyla"],
+  ["Angie berapa kali dugem selama Andra nginep belajar OSCE?", "2 kali"],
+  ["Di mana Angie pertama kali bilang ‘I love you’?", "Lana"],
+  ["Sebelum dibeliin Andra Foom, device pod Angie warna apa?", "Hitam"],
+  ["Hal kecil apa yang Angie suka kalau Andra lakukan?", "Elus-elus kepala dan dicium"],
+  ["Angie kasih Andra berapa kado?", "RAHASIA HEHE KALO MAINNYA PAS BELUM DIKASI KADO"],
+  ["Angie biasanya kalau kesel tapi nggak mau bilang, ngomongnya apa?", "Gapapa seng"],
+  ["Makanan yang paling sering Angie pesan kalau bingung mau makan apa?", "Ayam"],
+  ["Kalau mau mens, biasanya tanda-tanda Angie apa?", "Kedinginan"],
+  ["Barang yang selalu Angie bawa selain hape dan pod apa?", "AirPods"],
+  ["Angie paling suka dipanggil apa sama Andra?", "Princess"],
+  ["Kapan atau situasi apa pertama kali yang bikin Angie suka sama Andra?", "Jawaban bebas — ceritain versi kalian ♡"],
+  ["Bunga favorit Angie apa?", "Hydrangea / mawar"],
+  ["Nama autoimun Angie apa?", "Psoriasis"],
+  ["Posisi Angie di Ristek apa?", "Vice Director Marketing and Communications"],
+  ["Baju apa yang Andra nggak suka dari Angie?", "Celana baggy jeans biru besar"],
+  ["Jurusan Angie apa?", "Sistem Informasi"],
+  ["Lego apa yang kemarin Angie beli?", "Wednesday"],
+  ["Siapa penyanyi Indonesia yang Angie suka?", "Nadin Amizah"],
+  ["Kapan pertama kali Angie spend uang buat Andra?", "Makan AYCE"]
+].map(([question, answer], index) => ({ question, answer, points: ((index % 5) + 1) * 10 }));
+
+function shuffledFamilyQuestions() {
+  return [...familyQuestions].sort(() => Math.random() - .5).slice(0, 25);
+}
 
 const whoSaidRounds = [
   { message: "mau makan apa? tapi jangan jawab terserah yaa", sender: "angie", time: "19:42", reaction: "🍜" },
@@ -191,40 +201,32 @@ export function GamesPage() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#f8f0e4] text-[#351522]">
-      {pendingGame&&<GameSetup players={players} selected={selectedPlayers} setSelected={setSelectedPlayers} onClose={()=>setPendingGame(null)} onAdd={()=>setShowAdd(true)} onStart={()=>{if(selectedPlayers[0])setActivePlayerId(selectedPlayers[0]);setGame(pendingGame);setPendingGame(null)}}/>}
       <section className="arcade-hero relative border-b-4 border-[#591329] px-5 py-16 md:px-8">
         <div className="absolute left-[5%] top-16 hidden rotate-[-8deg] border-2 border-[#591329] bg-[#efbe55] px-5 py-3 font-mono text-[9px] font-black shadow-[5px_6px_0_#81a7d0] md:block">INSERT LOVE<br/>PRESS PLAY ♡</div>
         <div className="mx-auto max-w-7xl text-center">
-          <p className="font-mono text-[10px] font-black uppercase tracking-[.38em] text-[#c33d64]">eight games · unlimited rematches</p>
+          <p className="font-mono text-[10px] font-black uppercase tracking-[.38em] text-[#c33d64]">family 100 · unlimited rematches</p>
           <h1 className="mt-5 font-serif text-6xl font-black leading-[.85] sm:text-8xl">love arcade<span className="text-[#ca456c]">!</span></h1>
-          <p className="mx-auto mt-6 max-w-lg font-mono text-xs leading-6">Pick your player, choose a game, and settle every very important relationship question.</p>
-
-          <div className="mx-auto mt-10 max-w-3xl border-2 border-[#591329] bg-[#fffaf2] p-4 shadow-[7px_8px_0_#d989a2]">
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <span className="mr-2 font-mono text-[9px] font-black uppercase tracking-widest">who&apos;s playing?</span>
-              {players.map(p => <div key={p.id} className="flex items-center gap-2 rounded-full border-2 border-[#b797a1] bg-white px-3 py-2"><span className="h-3 w-3 rounded-full" style={{backgroundColor:p.color}}/><b className="font-mono text-[10px]">{p.name}</b><small className="font-mono text-[8px] text-[#866874]">{p.points} pts</small></div>)}
-              <button type="button" onClick={()=>setShowAdd(true)} className="grid h-10 w-10 place-items-center rounded-full border-2 border-dashed border-[#7f5765] font-black">+</button>
-            </div>
-          </div>
+          <p className="mx-auto mt-6 max-w-lg font-mono text-xs leading-6">Buka kotak pertanyaan dan lihat seberapa hafal kalian dengan cerita sendiri.</p>
         </div>
       </section>
 
       {game === null ? (
         <section className="arcade-floor relative px-5 py-20 md:px-8">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-10 flex items-end justify-between gap-5"><div><p className="font-mono text-[9px] font-black uppercase tracking-[.3em] text-[#c13c61]">game cabinet</p><h2 className="mt-2 font-serif text-4xl font-black">choose your game, {activePlayer.name}</h2></div><div className="hidden text-right font-mono text-[9px] uppercase sm:block"><b className="text-xl">{activePlayer.points}</b><br/>total points</div></div>
-            <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
-              {games.map((item,index)=><button key={item.id} type="button" onClick={()=>setPendingGame(item.id)} className={`game-cabinet group relative min-h-[310px] overflow-hidden border-2 border-[#491321] p-6 text-left shadow-[8px_9px_0_#263f61] transition hover:-translate-y-3 ${index===0?"lg:row-span-2 lg:min-h-full":""}`} style={{backgroundColor:item.color}}>
-                <span className="absolute right-5 top-4 font-mono text-5xl font-black text-white/25">{item.number}</span><span className="grid h-20 w-20 place-items-center rounded-full border-2 border-[#491321] bg-[#fffaf2] text-5xl shadow-[4px_5px_0_rgba(73,19,33,.25)]">{item.icon}</span><p className="mt-8 font-mono text-[9px] font-black uppercase tracking-[.2em]">{item.tag}</p><h3 className="mt-2 font-serif text-4xl font-black leading-none">{item.title}</h3><p className="mt-4 max-w-xs font-mono text-[11px] leading-5">{item.description}</p><span className="mt-7 inline-block border-2 border-[#491321] bg-[#fffaf2] px-5 py-2.5 font-mono text-[10px] font-black shadow-[3px_4px_0_#491321] transition group-hover:translate-x-2">PLAY →</span>
+            <div className="mb-10 text-center"><p className="font-mono text-[9px] font-black uppercase tracking-[.3em] text-[#c13c61]">now playing</p><h2 className="mt-2 font-serif text-4xl font-black">Family 100: Couple Edition</h2></div>
+            <div className="mx-auto grid max-w-2xl gap-7">
+              {visibleGames.map(item=><button key={item.id} type="button" onClick={()=>setGame(item.id)} className="game-cabinet group relative min-h-[310px] overflow-hidden border-2 border-[#491321] p-6 text-left shadow-[8px_9px_0_#263f61] transition hover:-translate-y-3" style={{backgroundColor:item.color}}>
+                <span className="grid h-20 w-20 place-items-center rounded-full border-2 border-[#491321] bg-[#fffaf2] text-5xl shadow-[4px_5px_0_rgba(73,19,33,.25)]">{item.icon}</span><p className="mt-8 font-mono text-[9px] font-black uppercase tracking-[.2em]">{item.tag}</p><h3 className="mt-2 font-serif text-4xl font-black leading-none">{item.title}</h3><p className="mt-4 max-w-md font-mono text-[11px] leading-5">{item.description}</p><span className="mt-7 inline-block border-2 border-[#491321] bg-[#fffaf2] px-5 py-2.5 font-mono text-[10px] font-black shadow-[3px_4px_0_#491321] transition group-hover:translate-x-2">PLAY →</span>
               </button>)}
+              <p className="mt-7 text-center font-serif text-3xl font-black italic text-[#591329]">More games are coming!</p>
             </div>
           </div>
         </section>
       ) : (
         <section className="arcade-floor relative px-5 py-12 md:px-8">
           <div className="mx-auto max-w-6xl">
-            <div className="mb-7 flex items-center justify-between"><button type="button" onClick={()=>setGame(null)} className="border-2 border-[#591329] bg-white px-4 py-2 font-mono text-[10px] font-black shadow-[3px_4px_0_#d98ba3]">← game menu</button><div className="font-mono text-[10px] font-black">{activePlayer.avatar} {activePlayer.name}&apos;s turn · {activePlayer.points} pts</div></div>
-            {game==="bingo"&&<Family100 players={players.filter(p=>selectedPlayers.includes(p.id))}/>}
+            <div className="mb-7"><button type="button" onClick={()=>setGame(null)} className="border-2 border-[#591329] bg-white px-4 py-2 font-mono text-[10px] font-black shadow-[3px_4px_0_#d98ba3]">← game menu</button></div>
+            {game==="bingo"&&<Family100/>}
             {game==="memory"&&<WhoSaidThat players={players}/>}
             {game==="month"&&<TelepathyGame players={players.filter(p=>selectedPlayers.includes(p.id))}/>}
             {game==="cards"&&<DrawOurMemory/>}
@@ -236,8 +238,6 @@ export function GamesPage() {
         </section>
       )}
 
-      <footer className="border-t-4 border-[#591329] bg-[#591329] px-5 py-9 text-center text-white"><p className="font-serif text-2xl font-black italic">winner buys the snacks. ♡</p><Link href="/" className="mt-4 inline-block font-mono text-[9px] uppercase tracking-widest">← back home</Link></footer>
-
       {showAdd&&<div className="fixed inset-0 z-50 grid place-items-center bg-[#281019]/65 px-4 backdrop-blur-sm" onMouseDown={e=>e.target===e.currentTarget&&setShowAdd(false)}><form onSubmit={addPlayer} className="gift-dialog relative w-full max-w-sm border-2 border-[#591329] bg-[#fffaf2] p-7 shadow-[8px_9px_0_#8eafd7]"><button type="button" onClick={()=>setShowAdd(false)} className="absolute right-3 top-2 text-2xl">×</button><p className="font-mono text-[9px] font-black uppercase tracking-widest text-[#c13e63]">new challenger</p><h2 className="mt-2 font-serif text-3xl font-black">add a player</h2><input autoFocus value={newName} onChange={e=>setNewName(e.target.value)} placeholder="player name..." className="mt-5 w-full border-2 border-[#591329] bg-white px-4 py-3 font-mono text-xs outline-none"/><button className="mt-4 w-full bg-[#591329] px-4 py-3 font-mono text-xs font-black text-white">join the arcade →</button></form></div>}
     </main>
   );
@@ -247,41 +247,30 @@ function GameSetup({players,selected,setSelected,onClose,onAdd,onStart}:{players
 
 function GameFrame({eyebrow,title,children}:{eyebrow:string;title:string;children:React.ReactNode}) { return <div className="game-frame border-2 border-[#501326] bg-[#fffaf3] p-5 shadow-[9px_11px_0_#829fc3] sm:p-8"><header className="border-b-2 border-dashed border-[#c6a2ad] pb-5 text-center"><p className="font-mono text-[9px] font-black uppercase tracking-[.3em] text-[#c03d62]">{eyebrow}</p><h2 className="mt-2 font-serif text-4xl font-black sm:text-5xl">{title}</h2></header><div className="mt-7">{children}</div></div> }
 
-function Family100({players}:{players:Player[]}) {
-  const contestants=players.length?players:defaultPlayers;
-  const [turn,setTurn]=useState(0);
-  const [scores,setScores]=useState<Record<string,number>>({});
-  const [used,setUsed]=useState<string[]>([]);
-  const [active,setActive]=useState<{category:number;question:number}|null>(null);
+function Family100() {
+  const [questions,setQuestions]=useState<FamilyQuestion[]>(shuffledFamilyQuestions);
+  const [used,setUsed]=useState<number[]>([]);
+  const [active,setActive]=useState<number|null>(null);
   const [revealed,setRevealed]=useState(false);
-  const current=contestants[turn%contestants.length];
-  const selected=active?familyCategories[active.category].questions[active.question]:null;
-  const key=active?`${active.category}-${active.question}`:"";
-  const finished=used.length===25;
+  const selected=active!==null?questions[active]:null;
+  const finished=used.length===questions.length;
 
-  const openQuestion=(category:number,question:number)=>{const nextKey=`${category}-${question}`;if(used.includes(nextKey))return;setActive({category,question});setRevealed(false)};
-  const reveal=()=>{if(!selected||revealed)return;setRevealed(true);setScores(old=>({...old,[current.id]:(old[current.id]??0)+selected.points}));setUsed(old=>[...old,key])};
-  const continueGame=()=>{setActive(null);setRevealed(false);setTurn(value=>(value+1)%contestants.length)};
-  const reset=()=>{setTurn(0);setScores({});setUsed([]);setActive(null);setRevealed(false)};
+  const openQuestion=(index:number)=>{if(used.includes(index))return;setActive(index);setRevealed(false)};
+  const reveal=()=>{if(!selected||revealed||active===null)return;setRevealed(true);setUsed(old=>[...old,active])};
+  const continueGame=()=>{setActive(null);setRevealed(false)};
+  const reset=()=>{setQuestions(shuffledFamilyQuestions());setUsed([]);setActive(null);setRevealed(false)};
 
-  return <GameFrame eyebrow="25 pertanyaan · 5 kategori · rebut poinnya" title="Family 100: Couple Edition">
+  return <GameFrame eyebrow="25 dari 41 pertanyaan · selalu diacak tiap game" title="Family 100: Couple Edition">
     <div className="mx-auto max-w-5xl">
-      <div className="mb-7 grid gap-3 sm:grid-cols-[1fr_auto]">
-        <div className="flex flex-wrap gap-2">{contestants.map((player,index)=><div key={player.id} className={`flex items-center gap-2 border-2 px-3 py-2 ${index===turn?"border-[#591329] bg-[#f2c3d0] shadow-[3px_4px_0_#789fd0]":"border-[#c6a5af] bg-white"}`}><span>{player.avatar}</span><span className="font-mono text-[9px] font-black uppercase">{player.name}<b className="ml-2 text-[#b52f58]">{scores[player.id]??0} pts</b></span></div>)}</div>
-        <div className="self-center text-right font-mono text-[9px] font-black uppercase text-[#77515e]">giliran<br/><b className="text-sm text-[#351522]">{current.name}</b></div>
-      </div>
-
-      {finished?<Result icon="🏆" title={`${contestants.slice().sort((a,b)=>(scores[b.id]??0)-(scores[a.id]??0))[0].name} menang!`} text={`Semua kotak sudah dibuka. Skor tertinggi: ${Math.max(...contestants.map(p=>scores[p.id]??0))} poin.`} reset={reset}/>:<div className="overflow-x-auto pb-3"><div className="grid min-w-[720px] grid-cols-5 gap-2 rounded-sm border-4 border-[#351522] bg-[#351522] p-2 shadow-[8px_9px_0_#789fd0]">
-        {familyCategories.map(category=><div key={category.name} className="grid min-h-24 place-items-center border-2 border-white/70 p-2 text-center text-white" style={{backgroundColor:category.color}}><span className="text-2xl">{category.icon}</span><b className="font-mono text-[10px] uppercase leading-tight tracking-wider">{category.name}</b></div>)}
-        {[0,1,2,3,4].flatMap(question=>familyCategories.map((category,categoryIndex)=>{const tileKey=`${categoryIndex}-${question}`;const done=used.includes(tileKey);return <button key={tileKey} type="button" disabled={done} onClick={()=>openQuestion(categoryIndex,question)} className={`family-tile grid min-h-20 place-items-center border-2 font-mono text-2xl font-black transition ${done?"border-[#694657] bg-[#24101a] text-[#745565]":"border-[#f3c35b] bg-[#fff7df] text-[#9e284e] hover:-translate-y-1 hover:bg-[#f3c35b] hover:text-[#351522]"}`}>{done?"✓":category.questions[question].points}</button>}))}
+      {finished?<Result icon="🏆" title="Semua pertanyaan sudah dibuka!" text="Main lagi untuk mendapatkan kombinasi 25 pertanyaan baru." reset={reset}/>:<div className="mx-auto max-w-3xl pb-3"><div className="grid grid-cols-5 gap-2 rounded-sm border-4 border-[#351522] bg-[#351522] p-2 shadow-[8px_9px_0_#789fd0]">
+        {questions.map((question,index)=>{const done=used.includes(index);return <button key={`${question.question}-${index}`} type="button" disabled={done} onClick={()=>openQuestion(index)} className={`family-tile grid aspect-square min-h-16 place-items-center border-2 font-mono font-black transition sm:min-h-24 ${done?"border-[#694657] bg-[#24101a] text-[#745565]":"border-[#f3c35b] bg-[#fff7df] text-[#9e284e] hover:-translate-y-1 hover:bg-[#f3c35b] hover:text-[#351522]"}`}><span className="text-lg sm:text-2xl">{done?"✓":String(index+1).padStart(2,"0")}</span>{!done&&<small className="text-[7px] uppercase sm:text-[8px]">{question.points} pts</small>}</button>})}
       </div></div>}
 
-      {active&&selected&&<div className="family-overlay fixed inset-0 z-[60] grid place-items-center bg-[#210b14]/80 px-4 backdrop-blur-sm" onMouseDown={event=>{if(event.target===event.currentTarget&&revealed)continueGame()}}><div className="family-question relative w-full max-w-2xl overflow-hidden border-4 border-[#f2c258] bg-[#fff9ed] p-6 text-center shadow-[10px_12px_0_#789fd0] sm:p-10">
-        <div className="absolute left-0 top-0 h-2 w-full" style={{backgroundColor:familyCategories[active.category].color}}/>
-        <p className="font-mono text-[9px] font-black uppercase tracking-[.25em] text-[#b6385d]">{familyCategories[active.category].icon} {familyCategories[active.category].name} · {selected.points} poin</p>
-        <p className="mt-3 font-mono text-[9px] uppercase text-[#80636d]">pertanyaan untuk {current.name}</p>
+      {active!==null&&selected&&<div className="family-overlay fixed inset-0 z-[60] grid place-items-center bg-[#210b14]/80 px-4 backdrop-blur-sm" onMouseDown={event=>{if(event.target===event.currentTarget&&revealed)continueGame()}}><div className="family-question relative w-full max-w-2xl overflow-hidden border-4 border-[#f2c258] bg-[#fff9ed] p-6 text-center shadow-[10px_12px_0_#789fd0] sm:p-10">
+        <div className="absolute left-0 top-0 h-2 w-full bg-[#d95f83]"/>
+        <p className="font-mono text-[9px] font-black uppercase tracking-[.25em] text-[#b6385d]">question {String(active+1).padStart(2,"0")} · {selected.points} poin</p>
         <h3 className="mx-auto mt-7 max-w-xl font-serif text-3xl font-black leading-tight sm:text-4xl">{selected.question}</h3>
-        {!revealed?<button type="button" onClick={reveal} className="mt-9 bg-[#591329] px-8 py-4 font-mono text-xs font-black uppercase text-white shadow-[5px_6px_0_#e194ab]">buka jawaban +{selected.points}</button>:<div className="confetti-pop mt-8"><p className="font-mono text-[9px] font-black uppercase tracking-[.3em] text-[#31527e]">survey says...</p><div className="mt-3 border-4 border-[#351522] bg-[#f2c258] px-5 py-5 font-serif text-3xl font-black shadow-[5px_6px_0_#d95f83]">{selected.answer}</div><p className="mt-4 font-mono text-xs font-black text-[#b52f58]">+{selected.points} poin untuk {current.name}!</p><button type="button" onClick={continueGame} className="mt-6 bg-[#31527e] px-7 py-3 font-mono text-xs font-black text-white">lanjut ke pemain berikutnya →</button></div>}
+        {!revealed?<button type="button" onClick={reveal} className="mt-9 bg-[#591329] px-8 py-4 font-mono text-xs font-black uppercase text-white shadow-[5px_6px_0_#e194ab]">buka jawaban</button>:<div className="confetti-pop mt-8"><p className="font-mono text-[9px] font-black uppercase tracking-[.3em] text-[#31527e]">survey says...</p><div className="mt-3 border-4 border-[#351522] bg-[#f2c258] px-5 py-5 font-serif text-3xl font-black shadow-[5px_6px_0_#d95f83]">{selected.answer}</div><button type="button" onClick={continueGame} className="mt-6 bg-[#31527e] px-7 py-3 font-mono text-xs font-black text-white">pilih pertanyaan berikutnya →</button></div>}
       </div></div>}
     </div>
   </GameFrame>
